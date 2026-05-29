@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor de Música | FFT Edition</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="player-container">
+        
+        <!-- Header -->
+        <header class="header">
+            <h1>Reproductor de Música</h1>
+            <div class="folder-selector">
+                <button id="btn-folder">Seleccionar Archivos</button>
+                <input type="file" id="file-input" multiple accept="audio/*" style="display: none;">
+                <span id="folder-path"></span>
+            </div>
+        </header>
+
+        <!-- FFT Visualizer -->
+        <section class="visualizer-section">
+            <canvas id="fft-canvas" width="700" height="150"></canvas>
+            <div class="visualizer-overlay">
+                <span id="freq-display">00.0 Hz</span>
+            </div>
+        </section>
+
+        <!-- Song Selector -->
+        <select id="song-selector" size="8"></select>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <span id="current-time">00:00</span>
+            <input type="range" id="progress-slider" min="0" max="100" value="0">
+            <span id="total-time">00:00</span>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button id="btn-shuffle">Aleatorio</button>
+            <button id="btn-prev">Anterior</button>
+            <button id="btn-play">Reproducir</button>
+            <button id="btn-pause">Pausar</button>
+            <button id="btn-stop">Detener</button>
+            <button id="btn-next">Siguiente</button>
+            <button id="btn-repeat">Bucle</button>
+        </div>
+
+        <!-- Playlist/Queue -->
+        <div class="playlist-section">
+            <textarea id="playlist-display" readonly></textarea>
+            <div class="queue-controls">
+                <button id="btn-queue-next">Agregar a cola</button>
+                <button id="btn-add-playlist">Agregar a playlist</button>
+                <button id="btn-clear-queue">Limpiar cola</button>
+                <button id="btn-clear-playlist">Limpiar playlist</button>
+            </div>
+            <div class="status">
+                <span id="status-label">Listo</span>
+                <span id="queue-count">Cola: 0</span>
+            </div>
+        </div>
+
+        <!-- Visualizer Controls -->
+        <div class="visualizer-controls">
+            <div class="input-wrapper">
+                <label for="gain-slider">VOLUMEN</label>
+                <input type="range" id="gain-slider" min="0" max="1" step="0.01" value="0.8">
+            </div>
+            <div class="input-wrapper">
+                <label for="color-picker">COLOR FFT</label>
+                <input type="color" id="color-picker" value="#d4af37">
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden">
+        <div class="loading-bar"><div id="loading-progress"></div></div>
+        <span id="loading-text">Cargando...</span>
+    </div>
+
+    <script src="js/app.js" type="module"></script>
+</body>
+</html>
