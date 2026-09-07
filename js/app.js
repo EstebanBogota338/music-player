@@ -225,7 +225,7 @@ colorPicker.addEventListener('input', () => {
 // Drag and drop
 const dragOverlay = document.createElement('div');
 dragOverlay.className = 'drag-overlay';
-dragOverlay.innerHTML = '<span>🎵 Suelta tus archivos de audio aquí 🎵</span>';
+dragOverlay.innerHTML = '<span>Suelta tus archivos de audio aquí</span>';
 dragOverlay.style.cssText = `
     position: fixed;
     top: 0;
