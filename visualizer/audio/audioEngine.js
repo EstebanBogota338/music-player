@@ -29,7 +29,7 @@ class AudioEngine {
 
         // 2. Gain
         this.gainNode = this.audioContext.createGain();
-        this.gainNode.gain.value = 1.0;
+        this.gainNode.gain.value = 0.8;
 
         // 3. Compressor
         this.compressor = this.audioContext.createDynamicsCompressor();

@@ -27,6 +27,7 @@ const folderPath = document.getElementById('folder-path');
 const freqDisplay = document.getElementById('freq-display');
 
 const gainSlider = document.getElementById('gain-slider');
+const volumeLabel = document.getElementById('volume-label');
 const colorPicker = document.getElementById('color-picker');
 
 const loadingOverlay = document.getElementById('loading-overlay');
@@ -89,13 +90,11 @@ btnPrev.addEventListener('click', () => {
 
 btnShuffle.addEventListener('click', () => {
     engine.toggleShuffle();
-    btnShuffle.classList.toggle('active');
     setStatus(engine.shuffleMode ? 'Aleatorio ON' : 'Aleatorio OFF');
 });
 
 btnRepeat.addEventListener('click', () => {
-    engine.repeatMode = !engine.repeatMode;
-    btnRepeat.classList.toggle('active');
+    engine.toggleRepeat();
     setStatus(engine.repeatMode ? 'Bucle ON' : 'Bucle OFF');
 });
 
@@ -113,6 +112,17 @@ engine.onProgressUpdate = (current, total) => {
         const dominantFreq = Math.floor(percent * 20000);
         freqDisplay.textContent = `${dominantFreq.toFixed(1)} Hz`;
     }
+};
+
+engine.onTrackChange = (index) => {
+    selector.selectedIndex = index;
+    updatePlaylistDisplay();
+    setStatus('Reproduciendo');
+};
+
+engine.onStateChange = () => {
+    btnShuffle.classList.toggle('active', engine.shuffleMode);
+    btnRepeat.classList.toggle('active', engine.repeatMode);
 };
 
 slider.addEventListener('mousedown', () => isSeeking = true);
@@ -215,7 +225,9 @@ btnClearPlaylist.addEventListener('click', () => {
 
 // Volumen y color
 gainSlider.addEventListener('input', () => {
-    engine.setVolume(parseFloat(gainSlider.value));
+    const value = parseFloat(gainSlider.value);
+    engine.setVolume(value);
+    volumeLabel.textContent = Math.round(value * 100) + '%';
 });
 
 colorPicker.addEventListener('input', () => {
