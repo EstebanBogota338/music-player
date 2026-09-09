@@ -23,6 +23,7 @@ const selector = document.getElementById('song-selector');
 const playlistDisplay = document.getElementById('playlist-display');
 const statusLabel = document.getElementById('status-label');
 const queueCountLabel = document.getElementById('queue-count');
+const queueCountSidebarLabel = document.getElementById('queue-count-sidebar');
 const folderPath = document.getElementById('folder-path');
 const freqDisplay = document.getElementById('freq-display');
 
@@ -36,6 +37,7 @@ const loadingText = document.getElementById('loading-text');
 
 // Inicializar motor
 const engine = new AudioEngine(canvas);
+
 let isSeeking = false;
 
 async function boot() {
@@ -56,7 +58,7 @@ btnPlay.addEventListener('click', () => {
         setStatus('No hay canciones');
         return;
     }
-    engine.play();
+    playCurrentSelection();
     setStatus('Reproduciendo');
 });
 
@@ -115,6 +117,7 @@ engine.onProgressUpdate = (current, total) => {
 };
 
 engine.onTrackChange = (index) => {
+    engine.selectionIndex = index;
     selector.selectedIndex = index;
     updatePlaylistDisplay();
     setStatus('Reproduciendo');
@@ -123,6 +126,7 @@ engine.onTrackChange = (index) => {
 engine.onStateChange = () => {
     btnShuffle.classList.toggle('active', engine.shuffleMode);
     btnRepeat.classList.toggle('active', engine.repeatMode);
+    updateQueueCount();
 };
 
 slider.addEventListener('mousedown', () => isSeeking = true);
@@ -137,11 +141,8 @@ slider.addEventListener('change', () => {
 // Selector de canciones
 selector.addEventListener('change', () => {
     if (engine.playlist.length === 0) return;
-    engine.currentIndex = selector.selectedIndex;
-    engine.load(engine.playlist[engine.currentIndex]);
-    engine.play();
+    engine.selectionIndex = selector.selectedIndex;
     updatePlaylistDisplay();
-    setStatus('Reproduciendo');
 });
 
 // Seleccionar archivos
@@ -183,7 +184,8 @@ fileInput.addEventListener('change', async (e) => {
     engine.clearPlaylist();
     engine.playlist = audioFiles;
     engine.currentIndex = 0;
-    await engine.load(audioFiles[0]);
+    engine.selectionIndex = 0;
+    await engine.load(audioFiles[0], 0);
     populateSelector(audioFiles);
     updatePlaylistDisplay();
     setStatus(`${audioFiles.length} canciones cargadas`);
@@ -193,7 +195,7 @@ fileInput.addEventListener('change', async (e) => {
 
 // Queue y Playlist
 btnQueueNext.addEventListener('click', () => {
-    const selected = selector.selectedIndex;
+    const selected = engine.selectionIndex;
     if (selected >= 0 && selected < engine.playlist.length) {
         engine.addToQueue(engine.playlist[selected]);
         updatePlaylistDisplay();
@@ -202,11 +204,11 @@ btnQueueNext.addEventListener('click', () => {
 });
 
 btnAddPlaylist.addEventListener('click', () => {
-    const selected = selector.selectedIndex;
+    const selected = engine.selectionIndex;
     if (selected >= 0 && selected < engine.playlist.length) {
-        engine.addToPlaylist(engine.playlist[selected]);
+        engine.addNextToQueue(engine.playlist[selected]);
         updatePlaylistDisplay();
-        setStatus('Agregado a playlist');
+        setStatus('Añadido a continuación');
     }
 });
 
@@ -291,7 +293,8 @@ document.body.addEventListener('drop', async (e) => {
         engine.clearPlaylist();
         engine.playlist = files;
         engine.currentIndex = 0;
-        await engine.load(files[0]);
+        engine.selectionIndex = 0;
+        await engine.load(files[0], 0);
         populateSelector(files);
         updatePlaylistDisplay();
         setStatus(`${files.length} archivos cargados`);
@@ -309,7 +312,7 @@ document.addEventListener('keydown', (e) => {
                 engine.pause();
                 setStatus('Pausado');
             } else {
-                engine.play();
+                playCurrentSelection();
                 setStatus('Reproduciendo');
             }
             break;
@@ -342,6 +345,7 @@ function populateSelector(songs) {
     if (songs.length > 0) {
         selector.selectedIndex = 0;
     }
+    engine.selectionIndex = 0;
 }
 
 function updateSelectorIndex() {
@@ -351,19 +355,42 @@ function updateSelectorIndex() {
 function updatePlaylistDisplay() {
     if (engine.playlist.length === 0) {
         playlistDisplay.value = '';
-        queueCountLabel.textContent = 'Cola: 0';
         return;
     }
     
     const lines = [];
-    for (let i = 0; i < engine.playlist.length; i++) {
-        const marker = i === engine.currentIndex ? '▶ ' : '  ';
-        const isQueued = engine.queueCount > 0 && i > engine.currentIndex && i <= engine.currentIndex + engine.queueCount;
-        const queued = isQueued ? ' [COLA]' : '';
-        lines.push(`${marker}${engine.playlist[i].name}${queued}`);
+    const current = engine.playlist[engine.selectionIndex];
+    
+    // 1. Canción actual
+    lines.push(`▶ ${current.name}`);
+    
+    // 2. Cola (próximas canciones encoladas)
+    for (const file of engine.queue) {
+        lines.push(`↳ ${file.name} [COLA]`);
+    }
+    
+    // 3. Resto de la biblioteca después de la actual, sin repetir encoladas
+    for (let i = engine.selectionIndex + 1; i < engine.playlist.length; i++) {
+        const file = engine.playlist[i];
+        if (engine.queue.includes(file)) continue;
+        lines.push(`  ${file.name}`);
     }
     playlistDisplay.value = lines.join('\n');
-    queueCountLabel.textContent = `Cola: ${engine.queueCount}`;
+}
+
+function updateQueueCount() {
+    const text = `Cola: ${engine.queue.length}`;
+    queueCountLabel.textContent = text;
+    queueCountSidebarLabel.textContent = text;
+}
+
+function playCurrentSelection() {
+    const track = engine.playlist[engine.selectionIndex];
+    if (!track) return;
+    if (engine.currentFile !== track || !engine.audio.src) {
+        engine.load(track, engine.selectionIndex);
+    }
+    engine.play();
 }
 
 function setStatus(text) {

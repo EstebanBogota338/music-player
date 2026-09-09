@@ -10,11 +10,12 @@ class AudioEngine {
         
         this.playlist = [];
         this.currentIndex = 0;
+        this.selectionIndex = 0;
         this.paused = false;
         this.repeatMode = false;
         this.shuffleMode = false;
         this.originalOrder = [];
-        this.queueCount = 0;
+        this.queue = [];
         this.canvas = canvas;
         
         this.onProgressUpdate = null;
@@ -47,7 +48,7 @@ class AudioEngine {
         this.fftRenderer.start(this.fftAnalyzer);
     }
 
-    load(file) {
+    load(file, index) {
         if (this.audio.src && this.audio.src.startsWith('blob:')) {
             URL.revokeObjectURL(this.audio.src);
         }
@@ -55,6 +56,7 @@ class AudioEngine {
         this.audio.src = URL.createObjectURL(file);
         this.currentFile = file;
         this.paused = false;
+        if (index !== undefined) this.currentIndex = index;
         this.onTrackChange?.(this.currentIndex);
     }
 
@@ -91,6 +93,14 @@ class AudioEngine {
     }
 
     next() {
+        if (this.queue.length > 0) {
+            const nextFile = this.queue.shift();
+            this.load(nextFile);
+            this.play();
+            this.onStateChange?.();
+            return;
+        }
+        
         if (this.playlist.length === 0) return;
         
         if (this.shuffleMode) {
@@ -109,10 +119,8 @@ class AudioEngine {
             }
         }
         
-        if (this.queueCount > 0) this.queueCount--;
-        
         this.onTrackChange?.(this.currentIndex);
-        this.load(this.playlist[this.currentIndex]);
+        this.load(this.playlist[this.currentIndex], this.currentIndex);
         this.play();
     }
 
@@ -125,7 +133,7 @@ class AudioEngine {
         }
         this.currentIndex--;
         this.onTrackChange?.(this.currentIndex);
-        this.load(this.playlist[this.currentIndex]);
+        this.load(this.playlist[this.currentIndex], this.currentIndex);
         this.play();
     }
 
@@ -187,20 +195,18 @@ class AudioEngine {
     }
 
     addToQueue(file) {
-        const insertIdx = Math.min(this.currentIndex + 1, this.playlist.length);
-        this.playlist.splice(insertIdx, 0, file);
-        this.queueCount++;
+        this.queue.push(file);
+        this.onStateChange?.();
     }
 
-    addToPlaylist(file) {
-        this.playlist.push(file);
+    addNextToQueue(file) {
+        this.queue.unshift(file);
+        this.onStateChange?.();
     }
 
     clearQueue() {
-        if (this.queueCount > 0) {
-            this.playlist.splice(this.currentIndex + 1, this.queueCount);
-            this.queueCount = 0;
-        }
+        this.queue = [];
+        this.onStateChange?.();
     }
 
     clearPlaylist() {
@@ -210,7 +216,8 @@ class AudioEngine {
         }
         this.playlist = [];
         this.currentIndex = 0;
-        this.queueCount = 0;
+        this.selectionIndex = 0;
+        this.queue = [];
         this.shuffleMode = false;
         this.repeatMode = false;
         this.originalOrder = [];
