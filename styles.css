@@ -1013,7 +1013,7 @@ button.active {
 
 }
 
-@media (max-width: 750px) {
+@media (max-width: 768px) {
 
     .sidebar {
         position: static;
@@ -1033,8 +1033,33 @@ button.active {
         flex-direction: column;
     }
 
-    .sidebar-section {
+    .sidebar-section:not(.sidebar-playlist) {
         display: none;
+    }
+
+    .sidebar-playlist {
+        display: flex;
+
+        flex-wrap: wrap;
+
+        align-items: center;
+
+        gap: 8px;
+
+        margin-bottom: 10px;
+    }
+
+    .sidebar-playlist .sidebar-title {
+        flex: 1 1 100%;
+
+        padding-bottom: 4px;
+    }
+
+    .sidebar-playlist .status-card,
+    .sidebar-playlist .queue-card {
+        flex: 1 1 140px;
+
+        margin-bottom: 0;
     }
 
     .sidebar-bottom {
@@ -1047,6 +1072,43 @@ button.active {
         margin-left: 0;
 
         padding: 20px 15px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 18px;
+    }
+
+    .topbar {
+        display: none;
+    }
+
+    .dashboard,
+    .bottom-grid {
+        display: contents;
+    }
+
+    .now-playing {
+        order: 1;
+    }
+
+    .player {
+        order: 2;
+
+        margin-top: 0;
+    }
+
+    .settings-card {
+        order: 3;
+    }
+
+    .playlist-card {
+        order: 4;
+    }
+
+    .queue-panel {
+        order: 5;
     }
 
     .now-playing-content {
@@ -1057,10 +1119,6 @@ button.active {
 
     .track-actions {
         justify-content: center;
-    }
-
-    .bottom-grid {
-        grid-template-columns: 1fr;
     }
 
 }
